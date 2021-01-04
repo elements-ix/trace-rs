@@ -3,11 +3,14 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
 
+use indicatif::ProgressBar;
 use png;
 
 fn main() {
     let width = 600;
     let height = 400;
+
+    let bar = ProgressBar::new((width * height) as u64);
 
     let mut data = Vec::new();
     for j in (0..height).rev() {
@@ -19,8 +22,10 @@ fn main() {
             let ig = (255.99 * g as f64) as u8;
             let ib = (255.99 * b as f64) as u8;
             data.extend_from_slice(&[ir, ig, ib, 255]);
+            bar.inc(1);
         }
     }
+    bar.finish();
 
     let path = Path::new(r"./images/chapter-2.png");
     let file = File::create(path).unwrap();
