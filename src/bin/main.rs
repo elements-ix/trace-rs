@@ -8,9 +8,21 @@ use png;
 
 use trace::color::write_color;
 use trace::ray::Ray;
-use trace::vec3::{unit_vector, Color, Point3, Vec3};
+use trace::vec3::{dot, unit_vector, Color, Point3, Vec3};
+
+fn hit_sphere(center: Point3, radius: f64, ray: &Ray) -> bool {
+    let oc = ray.origin - center;
+    let a = dot(&ray.direction, &ray.direction);
+    let b = 2.0 * dot(&oc, &ray.direction);
+    let c = dot(&oc, &oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
+}
 
 fn ray_color(r: Ray) -> Color {
+    if hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, &r) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
     let unit_direction = unit_vector(r.direction);
     let t = 0.5 * (unit_direction.y() + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
@@ -51,7 +63,7 @@ fn main() {
     }
     bar.finish();
 
-    let path = Path::new(r"./images/chapter-4.png");
+    let path = Path::new(r"./images/chapter-5.png");
     let file = File::create(path).unwrap();
     let w = BufWriter::new(file);
 
