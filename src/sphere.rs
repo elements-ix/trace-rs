@@ -9,6 +9,12 @@ pub struct Sphere {
     pub radius: f64,
 }
 
+impl Sphere {
+    pub fn new(center: Point3, radius: f64) -> Self {
+        Sphere { center, radius }
+    }
+}
+
 impl Hit for Sphere {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
@@ -34,6 +40,13 @@ impl Hit for Sphere {
         let t = root;
         let p = r.at(t);
         let normal = (p - self.center) / self.radius;
-        return Some(HitRecord { t, p, normal });
+        let mut hit_record = HitRecord {
+            t,
+            p,
+            normal,
+            front_face: false,
+        };
+        hit_record.set_face_normal(r, normal);
+        return Some(hit_record);
     }
 }
