@@ -1,4 +1,7 @@
+use std::f64::consts::PI;
 use std::ops;
+
+use rand::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vec3(pub f64, pub f64, pub f64);
@@ -9,6 +12,22 @@ pub type Color = Vec3;
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3(x, y, z)
+    }
+
+    pub fn random() -> Self {
+        let mut rng = thread_rng();
+
+        Vec3(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>())
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Self {
+        let mut rng = thread_rng();
+
+        Vec3(
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+        )
     }
 
     pub fn x(&self) -> f64 {
@@ -110,6 +129,24 @@ impl ops::DivAssign for Vec3 {
         self.1 /= rhs.1;
         self.2 /= rhs.2;
     }
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = Vec3::random_range(-1.0, 1.0);
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    let mut rng = thread_rng();
+
+    let a: f64 = rng.gen_range(0.0..(2.0 * PI));
+    let z: f64 = rng.gen_range(-1.0..1.0);
+    let r: f64 = (1.0 - z * z).sqrt();
+    Vec3::new(r * a.cos(), r * a.sin(), z)
 }
 
 pub fn dot(u: &Vec3, v: &Vec3) -> f64 {

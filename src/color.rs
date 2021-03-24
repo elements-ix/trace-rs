@@ -7,9 +7,9 @@ pub fn write_color(data: &mut Vec<u8>, pixel_color: Color, samples_per_pixel: u3
     let b = pixel_color.z() * scale;
 
     data.extend_from_slice(&[
-        (255.99 * clamp(r, 0.0, 0.999)) as u8,
-        (255.99 * clamp(g, 0.0, 0.999)) as u8,
-        (255.99 * clamp(b, 0.0, 0.999)) as u8,
+        (255.99 * clamp(r.sqrt(), 0.0, 0.999)) as u8,
+        (255.99 * clamp(g.sqrt(), 0.0, 0.999)) as u8,
+        (255.99 * clamp(b.sqrt(), 0.0, 0.999)) as u8,
         255,
     ]);
 }

@@ -10,12 +10,17 @@ use rand::prelude::*;
 use trace::hit::Hit;
 use trace::ray::Ray;
 use trace::sphere::Sphere;
-use trace::vec3::{unit_vector, Color, Point3};
+use trace::vec3::{random_unit_vector, unit_vector, Color, Point3};
 use trace::{camera::Camera, color::write_color};
 
-fn ray_color(r: &Ray, world: &dyn Hit) -> Color {
+fn ray_color(r: &Ray, world: &dyn Hit, depth: u32) -> Color {
+    if depth <= 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
+
     if let Some(hit) = world.hit(r, 0.001, f64::INFINITY) {
-        return 0.5 * (hit.normal + Color::new(1.0, 1.0, 1.0));
+        let target = hit.p + hit.normal + random_unit_vector();
+        return 0.5 * ray_color(&Ray::new(hit.p, target - hit.p), world, depth - 1);
     }
 
     let unit_direction = unit_vector(r.direction);
@@ -31,6 +36,7 @@ fn main() {
     let width = 600;
     let height = (width as f64 / aspect_ratio) as u32;
     let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // world
     let world: Vec<Box<dyn Hit>> = vec![
@@ -47,11 +53,11 @@ fn main() {
     for j in (0..height).rev() {
         for i in 0..width {
             let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-            for s in 0..samples_per_pixel {
+            for _ in 0..samples_per_pixel {
                 let u = (i as f64 + rng.gen::<f64>()) / (width - 1) as f64;
                 let v = (j as f64 + rng.gen::<f64>()) / (height - 1) as f64;
                 let r = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &world);
+                pixel_color += ray_color(&r, &world, max_depth);
             }
             write_color(&mut data, pixel_color, samples_per_pixel);
             bar.inc(1);
@@ -59,7 +65,7 @@ fn main() {
     }
     bar.finish();
 
-    let path = Path::new(r"./images/chapter-7.png");
+    let path = Path::new(r"./images/chapter-8-3.png");
     let file = File::create(path).unwrap();
     let w = BufWriter::new(file);
 
