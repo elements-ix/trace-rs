@@ -1,15 +1,19 @@
 use crate::{util::clamp, vec3::Color};
 
-pub fn write_color(data: &mut Vec<u8>, pixel_color: Color, samples_per_pixel: u32) {
-    let scale = 1.0 / samples_per_pixel as f64;
-    let r = pixel_color.x() * scale;
-    let g = pixel_color.y() * scale;
-    let b = pixel_color.z() * scale;
+pub fn write_color(pixel_color: Color, samples_per_pixel: u32) -> Vec<u8> {
+    let mut r = pixel_color.x();
+    let mut g = pixel_color.y();
+    let mut b = pixel_color.z();
 
-    data.extend_from_slice(&[
+    let scale = 1.0 / samples_per_pixel as f64;
+    r *= scale;
+    b *= scale;
+    g *= scale;
+
+    vec![
         (255.99 * clamp(r.sqrt(), 0.0, 0.999)) as u8,
         (255.99 * clamp(g.sqrt(), 0.0, 0.999)) as u8,
         (255.99 * clamp(b.sqrt(), 0.0, 0.999)) as u8,
         255,
-    ]);
+    ]
 }
