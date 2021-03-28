@@ -7,11 +7,14 @@ use indicatif::ProgressBar;
 use png;
 use rand::prelude::*;
 
-use trace::hit::Hit;
 use trace::ray::Ray;
 use trace::sphere::Sphere;
 use trace::vec3::{random_unit_vector, unit_vector, Color, Point3};
 use trace::{camera::Camera, color::write_color};
+use trace::{
+    hit::Hit,
+    material::{Lambertian, Metal},
+};
 
 fn ray_color(r: &Ray, world: &dyn Hit, depth: u32) -> Color {
     if depth <= 0 {
@@ -19,6 +22,9 @@ fn ray_color(r: &Ray, world: &dyn Hit, depth: u32) -> Color {
     }
 
     if let Some(hit) = world.hit(r, 0.001, f64::INFINITY) {
+        if let Some(scattered) = hit.mat.scatter(&r, &hit) {
+            return scattered.attenuation * ray_color(&scattered.scattered, world, depth - 1);
+        }
         let target = hit.p + hit.normal + random_unit_vector();
         return 0.5 * ray_color(&Ray::new(hit.p, target - hit.p), world, depth - 1);
     }
@@ -39,9 +45,42 @@ fn main() {
     let max_depth = 50;
 
     // world
+    let material_ground = Box::new(Lambertian {
+        albedo: Color::new(0.8, 0.8, 0.0),
+    });
+    let material_center = Box::new(Lambertian {
+        albedo: Color::new(0.7, 0.3, 0.3),
+    });
+    let material_left = Box::new(Metal {
+        albedo: Color::new(0.8, 0.8, 0.8),
+        fuzz: 0.3,
+    });
+    let material_right = Box::new(Metal {
+        albedo: Color::new(0.8, 0.6, 0.2),
+        fuzz: 1.0,
+    });
+
     let world: Vec<Box<dyn Hit>> = vec![
-        Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)),
-        Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)),
+        Box::new(Sphere::new(
+            Point3::new(0.0, -100.5, -1.0),
+            100.0,
+            material_ground,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 0.0, -1.0),
+            0.5,
+            material_center,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(-1.0, 0.0, -1.0),
+            0.5,
+            material_left,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(1.0, 0.0, -1.0),
+            0.5,
+            material_right,
+        )),
     ];
 
     // camera
@@ -65,7 +104,7 @@ fn main() {
     }
     bar.finish();
 
-    let path = Path::new(r"./images/chapter-8-3.png");
+    let path = Path::new(r"./images/chapter-9-2.png");
     let file = File::create(path).unwrap();
     let w = BufWriter::new(file);
 
