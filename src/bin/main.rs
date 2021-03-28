@@ -34,6 +34,87 @@ fn ray_color(r: &Ray, world: &dyn Hit, depth: u32) -> Color {
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
+fn random_scene(rng: &mut ThreadRng) -> Vec<Box<dyn Hit>> {
+    let mut world: Vec<Box<dyn Hit>> = Vec::new();
+    let ground_material = Box::new(Lambertian {
+        albedo: Color::new(0.5, 0.5, 0.5),
+    });
+    world.push(Box::new(Sphere {
+        center: Point3::new(0.0, -1000.0, 0.0),
+        radius: 1000.0,
+        mat: ground_material,
+    }));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = rng.gen::<f64>();
+            let center = Point3::new(
+                a as f64 + 0.9 * rng.gen::<f64>(),
+                0.2,
+                b as f64 + 0.9 * rng.gen::<f64>(),
+            );
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = Color::random() * Color::random();
+                    let sphere_material = Box::new(Lambertian { albedo });
+                    world.push(Box::new(Sphere {
+                        center,
+                        radius: 0.2,
+                        mat: sphere_material,
+                    }));
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Color::random_range(0.5, 1.0);
+                    let fuzz = rng.gen_range(0.0..0.5);
+                    let sphere_material = Box::new(Metal { albedo, fuzz });
+                    world.push(Box::new(Sphere {
+                        center,
+                        radius: 0.2,
+                        mat: sphere_material,
+                    }));
+                } else {
+                    // glass
+                    let sphere_material = Box::new(Dielectric { ir: 1.5 });
+                    world.push(Box::new(Sphere {
+                        center,
+                        radius: 0.2,
+                        mat: sphere_material,
+                    }));
+                }
+            }
+        }
+    }
+
+    let large_glass_material = Box::new(Dielectric { ir: 1.5 });
+    world.push(Box::new(Sphere {
+        center: Point3::new(0.0, 1.0, 0.0),
+        radius: 1.0,
+        mat: large_glass_material,
+    }));
+
+    let large_diffuse_material = Box::new(Lambertian {
+        albedo: Color::new(0.4, 0.2, 0.1),
+    });
+    world.push(Box::new(Sphere {
+        center: Point3::new(-4.0, 1.0, 0.0),
+        radius: 1.0,
+        mat: large_diffuse_material,
+    }));
+
+    let large_metal_material = Box::new(Metal {
+        albedo: Point3::new(0.7, 0.6, 0.5),
+        fuzz: 0.0,
+    });
+    world.push(Box::new(Sphere {
+        center: Point3::new(4.0, 1.0, 0.0),
+        radius: 1.0,
+        mat: large_metal_material,
+    }));
+
+    world
+}
+
 fn main() {
     let mut rng = thread_rng();
 
@@ -45,47 +126,14 @@ fn main() {
     let max_depth = 50;
 
     // world
-    let material_ground = Box::new(Lambertian {
-        albedo: Color::new(0.8, 0.8, 0.0),
-    });
-    let material_center = Box::new(Lambertian {
-        albedo: Color::new(0.1, 0.2, 0.5),
-    });
-    let material_left = Box::new(Dielectric { ir: 1.5 });
-    let material_right = Box::new(Metal {
-        albedo: Color::new(0.8, 0.6, 0.2),
-        fuzz: 0.0,
-    });
-
-    let world: Vec<Box<dyn Hit>> = vec![
-        Box::new(Sphere::new(
-            Point3::new(0.0, -100.5, -1.0),
-            100.0,
-            material_ground,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(0.0, 0.0, -1.0),
-            0.5,
-            material_center,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(-1.0, 0.0, -1.0),
-            0.5,
-            material_left,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(1.0, 0.0, -1.0),
-            0.5,
-            material_right,
-        )),
-    ];
+    let world = random_scene(&mut rng);
 
     // camera
-    let lookfrom = Point3::new(3.0, 3.0, 2.0);
-    let lookat = Point3::new(0.0, 0.0, -1.0);
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = (lookfrom - lookat).length();
-    let aperture = 2.0;
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
 
     let cam = Camera::new(
         lookfrom,
@@ -115,7 +163,7 @@ fn main() {
     }
     bar.finish();
 
-    let path = Path::new(r"./images/chapter-12.png");
+    let path = Path::new(r"./images/chapter-13.png");
     let file = File::create(path).unwrap();
     let w = BufWriter::new(file);
 
