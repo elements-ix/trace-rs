@@ -11,7 +11,7 @@ pub struct ScatteredRay {
     pub scattered: Ray,
 }
 
-pub trait Scatter {
+pub trait Scatter: Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatteredRay>;
 }
 
