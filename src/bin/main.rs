@@ -7,7 +7,6 @@ use indicatif::ProgressBar;
 use png;
 use rand::prelude::*;
 
-use trace::ray::Ray;
 use trace::sphere::Sphere;
 use trace::vec3::{random_unit_vector, unit_vector, Color, Point3};
 use trace::{camera::Camera, color::write_color};
@@ -15,6 +14,7 @@ use trace::{
     hit::Hit,
     material::{Lambertian, Metal},
 };
+use trace::{material::Dielectric, ray::Ray};
 
 fn ray_color(r: &Ray, world: &dyn Hit, depth: u32) -> Color {
     if depth <= 0 {
@@ -48,13 +48,8 @@ fn main() {
     let material_ground = Box::new(Lambertian {
         albedo: Color::new(0.8, 0.8, 0.0),
     });
-    let material_center = Box::new(Lambertian {
-        albedo: Color::new(0.7, 0.3, 0.3),
-    });
-    let material_left = Box::new(Metal {
-        albedo: Color::new(0.8, 0.8, 0.8),
-        fuzz: 0.3,
-    });
+    let material_center = Box::new(Dielectric { ir: 1.5 });
+    let material_left = Box::new(Dielectric { ir: 1.5 });
     let material_right = Box::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
         fuzz: 1.0,
@@ -104,7 +99,7 @@ fn main() {
     }
     bar.finish();
 
-    let path = Path::new(r"./images/chapter-9-2.png");
+    let path = Path::new(r"./images/chapter-10-2.png");
     let file = File::create(path).unwrap();
     let w = BufWriter::new(file);
 
