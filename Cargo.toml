@@ -1,5 +1,5 @@
 [package]
-name = "trace"
+name = "tracers"
 version = "0.1.0"
 authors = ["Shane Sniff <slsniff@gmail.com>"]
 edition = "2018"

@@ -7,14 +7,14 @@ use indicatif::ProgressBar;
 use png;
 use rand::prelude::*;
 
-use trace::sphere::Sphere;
-use trace::vec3::{random_unit_vector, unit_vector, Color, Point3, Vec3};
-use trace::{camera::Camera, color::write_color};
-use trace::{
+use tracers::sphere::Sphere;
+use tracers::vec3::{random_unit_vector, unit_vector, Color, Point3, Vec3};
+use tracers::{camera::Camera, color::write_color};
+use tracers::{
     hit::Hit,
     material::{Lambertian, Metal},
 };
-use trace::{material::Dielectric, ray::Ray};
+use tracers::{material::Dielectric, ray::Ray};
 
 fn ray_color(r: &Ray, world: &dyn Hit, depth: u32) -> Color {
     if depth <= 0 {
