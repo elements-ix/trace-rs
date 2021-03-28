@@ -8,7 +8,7 @@ use png;
 use rand::prelude::*;
 
 use trace::sphere::Sphere;
-use trace::vec3::{random_unit_vector, unit_vector, Color, Point3};
+use trace::vec3::{random_unit_vector, unit_vector, Color, Point3, Vec3};
 use trace::{camera::Camera, color::write_color};
 use trace::{
     hit::Hit,
@@ -48,11 +48,13 @@ fn main() {
     let material_ground = Box::new(Lambertian {
         albedo: Color::new(0.8, 0.8, 0.0),
     });
-    let material_center = Box::new(Dielectric { ir: 1.5 });
+    let material_center = Box::new(Lambertian {
+        albedo: Color::new(0.1, 0.2, 0.5),
+    });
     let material_left = Box::new(Dielectric { ir: 1.5 });
     let material_right = Box::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
-        fuzz: 1.0,
+        fuzz: 0.0,
     });
 
     let world: Vec<Box<dyn Hit>> = vec![
@@ -79,7 +81,13 @@ fn main() {
     ];
 
     // camera
-    let cam = Camera::new();
+    let cam = Camera::new(
+        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0,
+        aspect_ratio,
+    );
 
     let bar = ProgressBar::new((width * height) as u64);
 
@@ -99,7 +107,7 @@ fn main() {
     }
     bar.finish();
 
-    let path = Path::new(r"./images/chapter-10-2.png");
+    let path = Path::new(r"./images/chapter-11-3.png");
     let file = File::create(path).unwrap();
     let w = BufWriter::new(file);
 
