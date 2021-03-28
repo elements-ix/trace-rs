@@ -3,9 +3,9 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
 
-use indicatif::ProgressBar;
 use png;
 use rand::prelude::*;
+use rayon::prelude::*;
 
 use tracers::sphere::Sphere;
 use tracers::vec3::{random_unit_vector, unit_vector, Color, Point3, Vec3};
@@ -145,23 +145,35 @@ fn main() {
         dist_to_focus,
     );
 
-    let bar = ProgressBar::new((width * height) as u64);
+    // let bar = ProgressBar::new((width * height) as u64);
 
     let mut data = Vec::new();
-    for j in (0..height).rev() {
-        for i in 0..width {
-            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-            for _ in 0..samples_per_pixel {
-                let u = (i as f64 + rng.gen::<f64>()) / (width - 1) as f64;
-                let v = (j as f64 + rng.gen::<f64>()) / (height - 1) as f64;
-                let r = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &world, max_depth);
-            }
-            write_color(&mut data, pixel_color, samples_per_pixel);
-            bar.inc(1);
-        }
+    let image = (0..height as usize)
+        .into_par_iter()
+        .rev()
+        .flat_map(|j| {
+            (0..width)
+                .into_par_iter()
+                .flat_map(|i| {
+                    let mut rng = thread_rng();
+
+                    let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                    for _s in 0..samples_per_pixel {
+                        let u = (i as f64 + rng.gen::<f64>()) / (width - 1) as f64;
+                        let v = (j as f64 + rng.gen::<f64>()) / (height as usize - 1) as f64;
+                        let r = cam.get_ray(u, v);
+                        pixel_color += ray_color(&r, &world, max_depth);
+                    }
+                    write_color(pixel_color, samples_per_pixel)
+                })
+                .collect::<Vec<u8>>()
+        })
+        .collect::<Vec<u8>>();
+
+    for col in image.chunks(4) {
+        let col_vec = col.to_vec();
+        data.extend_from_slice(col_vec.as_slice());
     }
-    bar.finish();
 
     let path = Path::new(r"./images/chapter-13.png");
     let file = File::create(path).unwrap();
