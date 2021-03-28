@@ -149,6 +149,17 @@ pub fn random_unit_vector() -> Vec3 {
     Vec3::new(r * a.cos(), r * a.sin(), z)
 }
 
+pub fn random_in_unit_disk() -> Vec3 {
+    let mut rng = thread_rng();
+
+    loop {
+        let p = Vec3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
+}
+
 pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
     u.0 * v.0 + u.1 * v.1 + u.2 * v.2
 }
