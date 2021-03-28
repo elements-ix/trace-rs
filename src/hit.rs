@@ -1,17 +1,19 @@
 use crate::{
+    material::Scatter,
     ray::Ray,
     vec3::{dot, Point3, Vec3},
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct HitRecord {
+#[derive(Copy, Clone)]
+pub struct HitRecord<'a> {
     pub p: Point3,
     pub normal: Vec3,
+    pub mat: &'a dyn Scatter,
     pub t: f64,
     pub front_face: bool,
 }
 
-impl HitRecord {
+impl HitRecord<'_> {
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
         self.front_face = dot(&r.direction, &outward_normal) < 0.0;
         self.normal = if self.front_face {

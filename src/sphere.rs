@@ -1,5 +1,6 @@
 use crate::{
     hit::{Hit, HitRecord},
+    material::Scatter,
     ray::Ray,
     vec3::{dot, Point3},
 };
@@ -7,11 +8,16 @@ use crate::{
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
+    pub mat: Box<dyn Scatter>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: Point3, radius: f64, mat: Box<dyn Scatter>) -> Self {
+        Sphere {
+            center,
+            radius,
+            mat,
+        }
     }
 }
 
@@ -44,6 +50,7 @@ impl Hit for Sphere {
             t,
             p,
             normal,
+            mat: &*self.mat,
             front_face: false,
         };
         hit_record.set_face_normal(r, normal);
